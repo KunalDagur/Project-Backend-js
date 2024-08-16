@@ -17,7 +17,9 @@ const registerUser = asyncHandler(async (req, res) => {
     //return response
 
     const { fullName, email, username, password } = req.body
-    console.log("Email : " + email);
+
+    // console.log("Email : " + email);
+
     if ([fullName, email, username, password].some((field) => field?.trim() === "")) {
         throw new apiError(400, "All fields are mandatory");
     }
@@ -25,12 +27,19 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new apiError(400, "Email is not valid");
     }
 
-    // const existedUser = User.findOne({
+
+    // const existedUser = await User.findOne({
     //     $or: [{ email }, { username }]
     // })
 
-    const existedEmail = User.find({ email })
-    const existedUserName = User.find({ email })
+    // if (existedUser) {
+    //     throw new apiError(409, "User is already registered with email or username")
+    // }
+
+    const existedEmail = await User.findOne({ email })
+    // console.log(existedEmail);
+    const existedUserName = await User.findOne({ username })
+
     if (existedEmail) {
         throw new apiError(409, "Email is already existed");
     }
@@ -38,40 +47,49 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new apiError(409, "username is already existed");
     }
 
+    // console.log(req.files)
+
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverimage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
+    let coverImageLocalPath;
+
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
     if (!avatarLocalPath) {
+        throw new apiError(400, "Avatar file is mandatory");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    const coverIamge = await uploadOnCloudinary(coverImageLocalPath)
+
+    if (!avatar) {
         throw new apiError(400, "Avatar file is required");
     }
 
-    const avatarVal = await uploadOnCloudinary(avatarLocalPath);
-    const coverVal = await uploadOnCloudinary(coverImageLocalPath)
-
-    if (!avatarVal) {
-        throw new apiError(400, "Avatar file is required");
-    }
-
-    const userRefernce = await User.create({
+    const user = await User.create({
         fullName,
-        avatarVal: avatarVal.url,
-        coverVal: coverVal?.url || "",
+        avatar: avatar.url,
+        coverImage: coverIamge?.url || "",
         email,
         password,
         username: username.toLowerCase()
     })
 
-    const createdUser = await User.findById(userRefernce._id).select(
+    const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     );
+
 
     if (!createdUser) {
         throw new apiError(500, "Something went wrong when registering the user")
     }
 
     return res.status(201).json(
-        new apiResponse(200, createdUser, "User registered successfully");
+        new apiResponse(200, createdUser, "User registered successfully")
     )
+
 })
 
 export { registerUser }
