@@ -129,9 +129,14 @@ const loginUser = asyncHandler(async (req, res) => {
     //     throw new apiError(400, "username or email is required")
     // }
 
+    if (!password) {
+        throw new apiError(400, "Password is required")
+    }
+    // console.log(password)
     const user = await User.findOne({
         $or: [{ username }, { email }]
     })
+    // console.log(user.refreshToken);
 
     if (!user) {
         throw new apiError(400, "User not found")
@@ -151,16 +156,17 @@ const loginUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     }
+    // console.log(accessToken)
 
     return res
         .status(200)
         .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        .json(
+        .cookie("refreshToken", refreshToken, options).json(
             // new apiResponse(
-            //     200, {
-            //     user: loggedInUser, accessToken, refreshToken
-            // },
+            //     200,
+            //     {
+            //         user: loggedInUser, accessToken, refreshToken
+            //     },
             "User logged in successfully"
         )
     // )
@@ -242,8 +248,8 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         throw new apiError(400, "Password not matched with new password")
     }
 
-    console.log("NEWPassword " + newPassword)
-    console.log("OldPassword " + oldPassword)
+    // console.log("NEWPassword " + newPassword)
+    // console.log("OldPassword " + oldPassword)
 
     const user = await User.findById(req.user?._id)
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
@@ -265,7 +271,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
-        .json(200, re.user, "Current User fetched successfully")
+        .json(new apiResponse(200, req.user, "Current User fetched successfully"))
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -286,7 +292,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new apiResponse(200, user, "Account details updated successfully"))
+        .json(new apiResponse(200, req.user, "Account details updated successfully"))
 })
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
@@ -407,14 +413,14 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         }
     ])
 
-    // console.log(channel)
+    // console.log(channel) 
     if (!channel?.length) {
         throw new apiError(400, "Channel does not exist")
     }
 
     return res
         .status(200)
-        .json(new apiResponse(200, {}, "User channel does not exist"))
+        .json(new apiResponse(200, channel[0], "User channel fetched successfully"))
 })
 
 const getWatchHistory = asyncHandler(async (req, res) => {
@@ -459,6 +465,9 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 }
             }
         ])
+    if (getWatchHistory == "") {
+        throw new apiError(400, "No history Available")
+    }
 
     return res
         .status(200)
