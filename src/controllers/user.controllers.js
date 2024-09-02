@@ -40,22 +40,16 @@ const registerUser = asyncHandler(async (req, res) => {
     if ([fullName, email, username, password].some((field) => field?.trim() === "")) {
         throw new apiError(400, "All fields are mandatory");
     }
+
+    // console.log("Email : " + email);
+
     if (!email.includes('@')) {
         throw new apiError(400, "Email is not valid");
     }
 
-    // console.log("Email : " + email);
-
-    // const existedUser = await User.findOne({
-    //     $or: [{ email }, { username }]
-    // })
-
-    // if (existedUser) {
-    //     throw new apiError(409, "User is already registered with email or username")
-    // }
 
     const existedEmail = await User.findOne({ email })
-    // console.log(existedEmail);
+
     const existedUserName = await User.findOne({ username })
 
     if (existedEmail) {
@@ -409,7 +403,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         }
     ])
 
-    // console.log(channel) 
+    console.log(channel)
     if (!channel?.length) {
         throw new apiError(400, "Channel does not exist")
     }

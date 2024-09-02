@@ -12,87 +12,89 @@ const createTweet = asyncHandler(async (req, res) => {
 
     const { content } = req.body;
 
-    if (!content) {
-        throw new apiError(400, "Content is required")
-    }
-
     console.log(content)
-
-    const tweetResponse = await Tweet.create(
-        {
-            owner: req.user.username,
-            content: content
-        }
-    )
-    console.log(req.user.username)
-
-
-
-    if (!req.user.username) {
-        throw new apiError(401, {}, "User not found")
+    if (!content?.trim()) {
+        throw new apiError(400, "Content cannot be empty")
     }
 
-    if (!tweetResponse.success) {
-        throw new apiError(401, {}, "Tweet failed")
+    const tweetResponse = await Tweet.create({ content: content, owner: req.user })
+
+    if (!tweetResponse) {
+        throw new apiError(500, "Error while creating tweet")
     }
-    if (tweetResponse.success) {
-        throw new apiError(401, {}, "Failed to create tweet")
-    }
 
-
-
-
-    console.log(req.user.username)
-
-
-
-    console.log(req.user._id);
 
     return res
         .status(201)
-        .json(new apiResponse(201, { content, username, owner }, "Tweet has been created successfully"))
+        .json(new apiResponse(201, { content, owner: req.user }, "Tweet has been created successfully"))
 
 })
 
 
 const getUserTweets = asyncHandler(async (req, res) => {
     // TODO: get user tweets
-    const { username } = req.User
+    const { userId } = req.params
 
-    if (!username?.trim()) {
-        throw new apiError(400, "Username not found")
+    if (!userId) {
+        throw new apiError(400, "User not found")
     }
 
-    const Twitter = await Tweet.aggregate([
-        {
-            $match: {
-                username: username.toLowerCase()
-            }
-        },
-        {
-            $lookup: {
-                from: "tweets",
-                localField: "_id",
-                foreignField: "Twitter",
-                as: "tweets"
-            }
-        }
-    ])
-    // console.log(Twitter);
+    if (isValidObjectId(userId)) {
+        throw new apiError(400, "Invalid user ID")
+    }
+
+
+    const tweets = await Tweet.find({ owner: req.user._id })
+
+    return res
+        .status(200)
+        .json(200, {}, "User tweets fetched successfully")
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
     //TODO: update tweet
-    // const tweet = await Tweet.findByIdAndUpdate(req.Tweet.content)
-    // console.log(tweet)
+    const { updatedContent } = req.body;
+    const { tweetId } = req.params
 
-    // return res
-    //     .status(201)
-    //     .json(new apiResponse(201, tweet, "Tweet has been updated successfully"))
+    if (!tweetId) {
+        throw new apiError(400, "Tweet not found")
+    }
+
+    if (!updatedContent?.trim()) {
+        throw new apiError(400, "Updated content cannot be empty")
+    }
+
+    const tweet = await Tweet.findByIdAndUpdate(
+        tweetId,
+        {
+            $set: {
+                content: updatedContent
+            }
+
+        }, { new: true })
+
+    if (!tweet) {
+        throw new apiError(500, "Error while updating tweet")
+    }
+
+
+    return res
+        .status(201)
+        .json(new apiResponse(201, tweet, "Tweet has been updated successfully"))
 })
 
 const deleteTweet = asyncHandler(async (req, res) => {
     //TODO: delete tweet
+    const { tweetId } = req.params
+    if (!tweetId) {
+        throw new apiError(400, "Tweet not found")
+    }
+
+    const tweet = await Tweet.findByIdAndDelete(tweetId)
+
+    return res
+        .status(204)
+        .json(new apiResponse(204, {}, "Tweet deleted successfully"))
 })
 
 export {
