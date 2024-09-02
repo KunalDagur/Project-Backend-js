@@ -36,7 +36,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const { fullName, email, username, password } = req.body
 
-    // console.log("Email : " + email);
 
     if ([fullName, email, username, password].some((field) => field?.trim() === "")) {
         throw new apiError(400, "All fields are mandatory");
@@ -45,6 +44,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new apiError(400, "Email is not valid");
     }
 
+    // console.log("Email : " + email);
 
     // const existedUser = await User.findOne({
     //     $or: [{ email }, { username }]
@@ -125,18 +125,16 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new apiError(400, "username or email is required")
     }
 
-    // if (!(email || username)) {
-    //     throw new apiError(400, "username or email is required")
-    // }
+
 
     if (!password) {
         throw new apiError(400, "Password is required")
     }
-    // console.log(password)
+
     const user = await User.findOne({
         $or: [{ username }, { email }]
     })
-    // console.log(user.refreshToken);
+
 
     if (!user) {
         throw new apiError(400, "User not found")
@@ -151,12 +149,13 @@ const loginUser = asyncHandler(async (req, res) => {
     const { refreshToken, accessToken } = await generateAccessAndRefreshToken(user._id);
 
     const loggedInUser = User.findById(user._id).select("-password -refreshToken")
+    // console.log("USERR" + user._id)
 
     const options = {
         httpOnly: true,
         secure: true
     }
-    // console.log(accessToken)
+
 
     return res
         .status(200)
@@ -354,7 +353,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         throw new apiError(400, "Username not found")
     }
 
-    // User.find({ username })
 
     const channel = await User.aggregate([
         {
