@@ -159,7 +159,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new apiResponse(201, {}, "Playlost has been deleted successfully"))
+        .json(new apiResponse(201, {}, "Playlist has been deleted successfully"))
 })
 
 const updatePlaylist = asyncHandler(async (req, res) => {
