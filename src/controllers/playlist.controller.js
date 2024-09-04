@@ -144,6 +144,10 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     // TODO: delete playlist
 
     if (!playlistId) {
+        throw new apiError(400, {}, "Playlist Id required")
+    }
+
+    if (isValidObjectId(playlistId)) {
         throw new apiError(400, {}, "Playlist not found")
     }
 
@@ -193,7 +197,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new apiResponse(201, { playlistDetails }, "Playlist details updated successfully"))
+        .json(new apiResponse(201, { updateplaylistDetails }, "Playlist details updated successfully"))
 })
 
 export {
