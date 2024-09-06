@@ -3,12 +3,6 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        // required: true,
-        unique: true,
-        trim: true
-    },
     watchHistory: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -52,7 +46,10 @@ const userSchema = new mongoose.Schema({
     refreshToken: {
         type: String
     }
-}, { timestamps: true })
+},
+    {
+        timestamps: true
+    })
 
 
 userSchema.pre("save", async function (next) {

@@ -4,7 +4,7 @@ import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 
 const generateAccessAndRefreshToken = async (userId) => {
@@ -64,13 +64,13 @@ const registerUser = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
+    if (!avatarLocalPath) {
+        throw new apiError(400, "Avatar file is mandatory");
+    }
     let coverImageLocalPath;
 
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
         coverImageLocalPath = req.files.coverImage[0].path;
-    }
-    if (!avatarLocalPath) {
-        throw new apiError(400, "Avatar file is mandatory");
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
@@ -80,14 +80,19 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new apiError(400, "Avatar file is required");
     }
 
+    console.log(username)
     const user = await User.create({
         fullName,
         avatar: avatar.url,
         coverImage: coverIamge?.url || "",
         email,
         password,
-        username: username.toLowerCase()
+        username: username.toLowerCase(),
     })
+
+
+    console.log(user)
+
 
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
