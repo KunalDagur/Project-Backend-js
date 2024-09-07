@@ -1,2 +1,2 @@
 
-Hey I am creating this project from https://github.com/hiteshchoudhary channel name "Chai aur Code"
+Hey I am creating this project from https://github.com/hiteshchoudhary channel name ["Chai aur Code"](https://www.youtube.com/@chaiaurcode)
