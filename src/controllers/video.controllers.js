@@ -122,14 +122,14 @@ const publishAVideo = asyncHandler(async (req, res) => {
     const uploadThumbnail = await uploadOnCloudinary(thumbnailLocalPath)
 
     if (!uploadVideo) {
-        throw new apiError(400, {}, "Error occured while uploading video on cloudinary")
+        throw new apiError(400, "Error occured while uploading video on cloudinary")
     }
 
     if (!(title || description)) {
         throw new apiError(400, {}, "Title and description are required")
     }
 
-    console.log(uploadVideo.public_id)
+    //console.log(uploadVideo.public_id)
 
     const publishVideo = await Video.create({
         title,
@@ -146,7 +146,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
         owner: req.user?._id
     })
 
-    console.log(uploadVideo.duration)
+    // console.log(uploadVideo.duration)
 
     if (!publishVideo) {
         throw new apiError(400, {}, "Error occured while uploading video")

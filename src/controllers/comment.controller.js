@@ -11,19 +11,20 @@ const getVideoComments = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10 } = req.query
 
     if (!isValidObjectId(videoId)) {
-        throw new apiError(400, {}, "Invalid video ID")
+        throw new apiError(400, "Invalid video ID")
     }
 
     let skip = (page - 1) * limit
-    const allComments = await Comment.findById(videoId).skip(skip).limit(limit)
+    const allComments = await Comment.find({ video: videoId }).skip(skip).limit(limit)
 
     if (!allComments) {
         throw new apiError(404, {}, "No comments found")
     }
 
+
     return res
         .status(200)
-        .json(new apiResponse(201, allComments, "Comments fetched successfully"))
+        .json(new apiResponse(201, { allComments: allComments }, "Comments fetched successfully"))
 
 })
 
@@ -32,24 +33,17 @@ const addComment = asyncHandler(async (req, res) => {
     const { videoId } = req.params
 
     if (!isValidObjectId(videoId)) {
-        throw new apiError(400, {}, "Video ID is not valid")
+        throw new apiError(400, "Video ID is not valid")
     }
 
-    const { commentValue } = req.body
+    const { content } = req.body
 
-    if (!commentValue) {
-        throw new apiError(400, {}, "Comment can not be empty")
+    if (!content) {
+        throw new apiError(400, "Comment can not be empty")
     }
-
-    const comment = await Comment.create(
-        commentValue,
-        {
-            $set: {
-                videos: videoId,
-                content: commentValue,
-                owner: req.user?._id
-            }
-        },
+    console.log(content)
+    const comment = await Comment.create({ videos: videoId, content: content, owner: req.user?._id }
+        ,
         {
             new: true
         }
@@ -67,29 +61,27 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
-    const { videoId } = req.params
 
-    if (!isValidObjectId(videoId)) {
-        throw new apiError(400, {}, "Invalid video ID")
-    }
     const { commentId } = req.params
+    const { commentValue } = req.body
+
+    if (!isValidObjectId(commentId)) {
+        throw new apiError(400, "Invalid comment ID")
+    }
 
     if (!commentId) {
         throw new apiError(400, {}, "Comment not found")
 
     }
-    const { commentValue } = req.body
     if (!commentValue) {
-        throw new apiError(400, {}, "Comment can not be empty")
+        throw new apiError(400, "Comment can not be empty")
     }
 
 
-    const updatedComment = await Comment.findOneAndUpdate(
+    const updatedComment = await Comment.findByIdAndUpdate(
         commentId, {
         $set: {
-            videos: videoId,
-            commentValue,
-            owner: req.user?._id
+            content: commentValue
         },
     }, {
         new: true
@@ -107,14 +99,14 @@ const updateComment = asyncHandler(async (req, res) => {
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
-    const { videoId, commentId } = req.params
+    const { commentId } = req.params
 
     if (!isValidObjectId(videoId)) {
-        throw new apiError(400, {}, "Invalid video ID")
+        throw new apiError(400, "Invalid video ID")
     }
 
     if (!isValidObjectId(commentId)) {
-        throw new apiError(400, {}, "Invalid Comment ID")
+        throw new apiError(400, "Invalid Comment ID")
     }
 
     const deletedComment = await Comment.findByIdAndDelete(commentId)
